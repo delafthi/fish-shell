@@ -1,3 +1,5 @@
+#[cfg(feature = "atuin-history-search")]
+mod atuin_history_search;
 mod history_search;
 
 mod input;

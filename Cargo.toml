@@ -104,6 +104,9 @@ terminfo.workspace = true
 xterm-color.workspace = true
 widestring.workspace = true
 
+atuin-client = { version = "18.10.0", optional = true}
+tokio = { version = "1", optional = true, features = ["rt"] }
+
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
 portable-atomic.workspace = true
 
@@ -162,6 +165,8 @@ localize-messages = ["dep:phf", "dep:fish-gettext-maps"]
 # desired. This happens when running tests via `build_tools/check.sh` and when calling
 # `build_tools/update_translations.fish`, so there should not be a need to enable it manually.
 gettext-extract = ["dep:fish-gettext-extraction"]
+# Enable Atuin history database integration
+atuin-history-search = ["dep:atuin-client", "dep:tokio"]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
 asan = []

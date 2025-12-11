@@ -1375,7 +1375,7 @@ impl ReaderData {
             input_data,
             queued_repaint: false,
             history,
-            history_search: Default::default(),
+            history_search: ReaderHistorySearch::default(),
             history_pager: None,
             cursor_selection_mode: CursorSelectionMode::Exclusive,
             cursor_end_mode: CursorEndMode::Exclusive,
@@ -2436,7 +2436,7 @@ impl<'a> Reader<'a> {
             self.clear_pager();
         }
 
-        if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as _ {
+        if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as u8 {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
             // TODO(MSRV>=1.88) if-let-chain
@@ -4971,6 +4971,24 @@ fn get_autosuggestion_performer(
         let mut icase_history_result = None;
 
         let line_range = range_of_line_at_cursor(&command_line, cursor_pos);
+
+        #[cfg(feature = "atuin-history-search")]
+        if !line_range.is_empty() {
+            let search_string = &command_line[line_range.clone()];
+            if let Ok(Some(suggestion)) = super::atuin_history_search::search(search_string) {
+                let suggestion_wstr = WString::from_str(&suggestion);
+                if suggestion_wstr.starts_with(search_string) {
+                    return AutosuggestionResult::new(
+                        command_line.clone(),
+                        line_range.clone(),
+                        suggestion_wstr,
+                        false,
+                        true,
+                    );
+                }
+            }
+        }
+
         // Search history for a matching item unless this line is not a continuation line or quoted.
         for (search_type, range) in [
             (SearchType::Prefix, 0..command_line.len()),

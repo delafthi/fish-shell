@@ -66,6 +66,9 @@ pub struct ReaderHistorySearch {
 
     /// The offset of the current token in the command line. Only non-zero for a token search.
     token_offset: usize,
+
+    /// The search term
+    search_term: WString,
 }
 
 impl ReaderHistorySearch {
@@ -115,7 +118,12 @@ impl ReaderHistorySearch {
 
     /// Return the string we are searching for.
     pub fn search_string(&self) -> &wstr {
-        self.search().original_term()
+        if let Some(search) = &self.search {
+            search.original_term()
+        } else {
+            // When using Atuin, return stored search term
+            &self.search_term
+        }
     }
 
     /// Return the range of the current match in the command line.
@@ -171,6 +179,7 @@ impl ReaderHistorySearch {
         self.match_index = 0;
         self.mode = mode;
         self.token_offset = token_offset;
+        self.search_term = text.clone();
         let flags = SearchFlags::NO_DEDUP | smartcase_flags(&text);
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         self.search = Some(HistorySearch::new_with(
@@ -194,6 +203,7 @@ impl ReaderHistorySearch {
         self.mode = SearchMode::Inactive;
         self.token_offset = 0;
         self.search = None;
+        self.search_term.clear();
     }
 
     /// Adds the given match if we haven't seen it before.
